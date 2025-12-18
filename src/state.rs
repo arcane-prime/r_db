@@ -1,7 +1,6 @@
 use std::sync::Mutex;
-use crate::{db::DB, aof::Aof};
+use crate::{ storage::StorageManager};
 
 pub struct AppState {
-    pub db: Mutex<DB>,
-    pub aof: Mutex<Aof>,
+    pub storage_manager: Mutex<StorageManager>
 }

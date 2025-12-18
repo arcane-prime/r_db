@@ -1,28 +1,27 @@
-mod db;
 mod handlers;
 mod aof;
 mod state;
+mod storage;
 
 use axum::{
     routing::{get, post, put, delete},
     Router,
 };
 use state::AppState;
-use aof::Aof;
-use db::DB;
 use std::sync::{Arc, Mutex};
 use tokio::net::TcpListener;
-
+use dotenvy::dotenv;
+use crate::storage::StorageManager;
 
 #[tokio::main]
 async fn main() {
-    let mut db = DB::new();
-    Aof::replay("data.aof", &mut db).expect("AOF replay failed");
-    
+    dotenv().ok();
+    let storage_manager = StorageManager::new()
+    .expect("Failed to initialize StorageManager and perform AOF recovery.");
+
     // shared application state
     let state = Arc::new(AppState {
-        db: Mutex::new(db),
-        aof: Mutex::new(Aof::new("data.aof").unwrap()),
+        storage_manager: Mutex::new(storage_manager)
     });
 
     // build router
@@ -42,9 +41,9 @@ async fn main() {
 
 fn build_router(state: Arc<AppState>) -> Router {
     Router::new()
-        .route("/get/{key}", get(handlers::get_key))
-        .route("/set/{key}", post(handlers::set_key))
-        .route("/update/{key}", put(handlers::update_key))
-        .route("/delete/{key}", delete(handlers::delete_key))
+        .route("/get/{key}", get(handlers::get_data))
+        .route("/set/{key}", post(handlers::set_data))
+        // .route("/update/{key}", put(handlers::update_key))
+        // .route("/delete/{key}", delete(handlers::delete_key))
         .with_state(state)
 }

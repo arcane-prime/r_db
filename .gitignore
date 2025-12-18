@@ -11,3 +11,9 @@ Thumbs.db
 # Editors
 .vscode/
 .idea/
+
+# env files
+.env
+
+# storage data files
+/data
