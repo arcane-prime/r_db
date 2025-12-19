@@ -42,7 +42,7 @@ async fn main() {
 fn build_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/get/{key}", get(handlers::get_data))
-        .route("/set/{key}", post(handlers::set_data))
+        .route("/set", post(handlers::set_data))
         // .route("/update/{key}", put(handlers::update_key))
         // .route("/delete/{key}", delete(handlers::delete_key))
         .with_state(state)

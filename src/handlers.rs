@@ -1,30 +1,35 @@
 use axum::{
     extract::{Path, State},
     response::Json,
+    http::StatusCode,
 };
 use std::sync::Arc;
 
 use crate::state::AppState;
 use serde_json::Value;
+use axum::response::Result;
 
 
 pub async fn get_data(
     State(state): State<Arc<AppState>>,
     Path(key): Path<String>,
-) -> Json<Option<Value>> { 
+) -> Result<Json<Option<Value>>, (StatusCode, String)> {
     let storage_manager = state.storage_manager.lock().unwrap();
-    Json(storage_manager.get(&key))
+    let result = storage_manager
+        .get(&key);
+    
+    Ok(Json(result))
 }
 
 pub async fn set_data(
     State(state): State<Arc<AppState>>,
-    Path(key): Path<String>,
     Json(value): Json<Value>,
-) -> Json<&'static str> { 
-    let storage_manager = state.storage_manager.lock().unwrap();
-    let p = storage_manager.put(key, value);
-    
-    Json("Ok")
+) -> Result<Json<String>, (StatusCode, String)> { 
+    let mut storage_manager = state.storage_manager.lock().unwrap();
+    let key = storage_manager
+        .put(value)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    Ok(Json(key))
 }
 
 // pub async fn update_key(
